@@ -26,15 +26,23 @@
     (and (and (>= x-pos 0) (< x-pos map-size))
          (and (>= y-pos 0) (< y-pos map-size)))))
 
+(defn check-overlap
+  [entity1 entity2]
+  (and (= (:x entity1) (:x entity2))
+       (= (:y entity1) (:y entity2))))
+
 (defn move
-  [entities direction screen]
-  (let [player (first entities)]
+  [entities direction screen text-screen]
+  (let [player (first entities)
+        lich   (second entities)]
     (if (:can-move player)
       (let [moved-player (assoc (move-player player direction) :can-move false)]
         (if (valid-position moved-player)
           (do
-            (add-timer! screen :move-lock 0.5)
             (position! screen (:x moved-player) (:y moved-player))
+            (if (check-overlap moved-player lich)
+              (screen! text-screen :on-status-change :game-over? true)
+              (add-timer! screen :move-lock 0.5))
             (replace {player moved-player} entities))
           entities)))))
 
